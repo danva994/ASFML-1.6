@@ -1,4 +1,4 @@
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 -- //
 -- // SFML - Simple and Fast Multimedia Library
 -- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
@@ -20,51 +20,51 @@
 -- //
 -- // 3. This notice may not be removed or altered from any source distribution.
 -- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
+
+--//////////////////////////////////////////////////////////
 with Interfaces.C.Strings;
 
 package body Sf.Graphics.Image is
    use Interfaces.C.Strings;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Create a new image from a file
-   -- ///
-   -- /// \param Filename : Path of the image file to load
-   -- ///
-   -- /// \return A new sfImage object, or NULL if it failed
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfImage_CreateFromFile (Filename : Standard.String) return sfImage_Ptr is
+   --//////////////////////////////////////////////////////////
+   --/ Create a new image from a file
+   --/
+   --/ @param Filename   Path of the image file to load
+   --/
+   --/ @return A new sfImage object, or NULL if it failed
+   --/
+   --//////////////////////////////////////////////////////////
+   function CreateFromFile (Filename : Standard.String) return sfImage_Ptr is
       function Internal (Filename : chars_ptr) return sfImage_Ptr;
-      pragma Import (C, Internal, "sfImage_CreateFromFile");
+      pragma Import (C, Internal, "sfImage_createFromFile");
       Temp : chars_ptr   := New_String (Filename);
       R    : sfImage_Ptr := Internal (Temp);
    begin
       Free (Temp);
       return R;
-   end sfImage_CreateFromFile;
+   end CreateFromFile;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Save the content of an image to a file
-   -- ///
-   -- /// \param Image :    Image to save
-   -- /// \param Filename : Path of the file to save (overwritten if already exist)
-   -- ///
-   -- /// \return sfTrue if saving was successful
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfImage_SaveToFile (Image : sfImage_Ptr; Filename : Standard.String) return sfBool is
+   --//////////////////////////////////////////////////////////
+   --/ Save the content of an image to a file
+   --/
+   --/ @param Image      Image to save
+   --/ @param Filename   Path of the file to save (overwritten if already exist)
+   --/
+   --/ @return sfTrue if saving was successful
+   --/
+   --//////////////////////////////////////////////////////////
+   function SaveToFile (Image : sfImage_Ptr; Filename : Standard.String) return sfBool is
       function Internal (Image : sfImage_Ptr; Filename : chars_ptr) return sfBool;
-      pragma Import (C, Internal, "sfImage_SaveToFile");
+      pragma Import (C, Internal, "sfImage_saveToFile");
       Temp : chars_ptr := New_String (Filename);
       R    : sfBool    := Internal (Image, Temp);
    begin
       Free (Temp);
       return R;
-   end sfImage_SaveToFile;
+   end SaveToFile;
 
 end Sf.Graphics.Image;

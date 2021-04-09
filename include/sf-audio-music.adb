@@ -1,4 +1,4 @@
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 -- //
 -- // SFML - Simple and Fast Multimedia Library
 -- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
@@ -24,32 +24,32 @@
 -- // 3. This notice may not be removed or altered from any source
 -- //    distribution.
 -- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
+
+--//////////////////////////////////////////////////////////
 with Interfaces.C.Strings;
 
 package body Sf.Audio.Music is
    use Interfaces.C.Strings;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Create a new music and load it from a file
-   -- ///
-   -- /// \param Filename : Path of the music file to open
-   -- ///
-   -- /// \return A new sfMusic object (NULL if failed)
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfMusic_CreateFromFile (Filename : String) return sfMusic_Ptr is
+   --//////////////////////////////////////////////////////////
+   --/ Create a new music and load it from a file
+   --/
+   --/ @param Filename   Path of the music file to open
+   --/
+   --/ @return A new sfMusic object (NULL if failed)
+   --/
+   --//////////////////////////////////////////////////////////
+   function CreateFromFile (Filename : String) return sfMusic_Ptr is
       function Internal (Filename : chars_ptr) return sfMusic_Ptr;
-      pragma Import (C, Internal, "sfMusic_CreateFromFile");
+      pragma Import (C, Internal, "sfMusic_createFromFile");
       Temp : chars_ptr   := New_String (Filename);
       R    : sfMusic_Ptr := Internal (Temp);
    begin
       Free (Temp);
       return R;
-   end sfMusic_CreateFromFile;
+   end CreateFromFile;
 
 end Sf.Audio.Music;

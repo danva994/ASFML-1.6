@@ -1,33 +1,26 @@
 with Ada.Text_IO;      use Ada.Text_IO;
-with Sf.Config;        use Sf.Config;
-with Sf.System.Thread; use Sf.System.Thread;
+
+with Sf.System.Thread; use Sf, Sf.System, Sf.System.Thread;
 with Sf.System.Sleep;  use Sf.System.Sleep;
-with Sf.System.Types;  use Sf.System.Types;
+
+with Thread_Func;
 
 procedure Main is
 
-   procedure Thread_Func (Arg : sfVoid_Ptr) is
-   begin
-      for I in 1 .. 10 loop
-         Put_Line ("I'm thread 1");
-         sfSleep (0.001);
-      end loop;
-   end Thread_Func;
-
    Thread : sfThread_Ptr;
-   TFunc  : sfThreadFunc_Ptr := Thread_Func'UNRESTRICTED_ACCESS;
-   UData  : sfVoid_Ptr;
+   TFunc  : sfThreadFunc_Ptr := Thread_Func'Access;
+   UData  : String := "Hello";
 
 begin
 
-   Thread := sfThread_Create (TFunc, UData);
-   sfThread_Launch (Thread);
+   Thread := Create (TFunc, UData'Address);
+   Launch (Thread);
 
    for I in 1 .. 10 loop
       Put_Line ("I'm main thread");
-      sfSleep (0.001);
+      sfDelay (0.001);
    end loop;
 
-   sfThread_Destroy (Thread);
+   Destroy (Thread);
 
 end Main;

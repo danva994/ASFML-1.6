@@ -1,4 +1,4 @@
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 -- //
 -- // SFML - Simple and Fast Multimedia Library
 -- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
@@ -20,48 +20,48 @@
 -- //
 -- // 3. This notice may not be removed or altered from any source distribution.
 -- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
+
+--//////////////////////////////////////////////////////////
 with Interfaces.C.Strings;
 
-package body Sf.Network.IPAddress is
+package body Sf.Network.IpAddress is
    use Interfaces.C.Strings;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Construct an address from a string
-   -- ///
-   -- /// \param String :  IP address ("xxx.xxx.xxx.xxx") or network name
-   -- ///
-   -- /// \return Resulting address
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfIPAddress_FromString (Str : String) return sfIPAddress is
-      function Internal (Str : chars_ptr) return sfIPAddress;
-      pragma Import (C, Internal, "sfIPAddress_FromString");
+   --//////////////////////////////////////////////////////////
+   --/ Construct an address from a string
+   --/
+   --/ @param String    IP address ("xxx.xxx.xxx.xxx") or network name
+   --/
+   --/ @return Resulting address
+   --/
+   --//////////////////////////////////////////////////////////
+   function FromString (str : String) return sfIpAddress is
+      function Internal (Str : chars_ptr) return sfIpAddress;
+      pragma Import (C, Internal, "sfIpAddress_fromString");
       Temp : chars_ptr   := New_String (Str);
-      R    : sfIPAddress := Internal (Temp);
+      R    : sfIpAddress := Internal (Temp);
    begin
       Free (Temp);
       return R;
-   end sfIPAddress_FromString;
+   end FromString;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get a string representation of an address
-   -- ///
-   -- /// \param Address : Address to convert
-   -- /// \param String :  Char array to fill (size must be >= 16)
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfIPAddress_ToString (Address : sfIPAddress; Str : out String) is
-      procedure Internal (Address : sfIPAddress; Str : chars_ptr);
-      pragma Import (C, Internal, "sfIPAddress_ToString");
+   --//////////////////////////////////////////////////////////
+   --/ Get a string representation of an address
+   --/
+   --/ @param Address   Address to convert
+   --/ @param String    Char array to fill (size must be >= 16)
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure ToString (Address : sfIpAddress; Str : out String) is
+      procedure Internal (Address : sfIpAddress; Str : chars_ptr);
+      pragma Import (C, Internal, "sfIpAddress_toString");
       Temp : chars_ptr;
    begin
       Internal (Address, Temp);
       Str (Str'FIRST .. Str'FIRST + 16) := Value (Temp) (0 .. 15);
-   end sfIPAddress_ToString;
+   end ToString;
 
-end Sf.Network.IPAddress;
+end Sf.Network.IpAddress;

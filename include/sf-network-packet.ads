@@ -1,178 +1,229 @@
--- ////////////////////////////////////////////////////////////
--- //
--- // SFML - Simple and Fast Multimedia Library
--- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
--- //
--- // This software is provided 'as-is', without any express or implied warranty.
--- // In no event will the authors be held liable for any damages arising from the use of this software.
--- //
--- // Permission is granted to anyone to use this software for any purpose,
--- // including commercial applications, and to alter it and redistribute it freely,
--- // subject to the following restrictions:
--- //
--- // 1. The origin of this software must not be misrepresented;
--- //    you must not claim that you wrote the original software.
--- //    If you use this software in a product, an acknowledgment
--- //    in the product documentation would be appreciated but is not required.
--- //
--- // 2. Altered source versions must be plainly marked as such,
--- //    and must not be misrepresented as being the original software.
--- //
--- // 3. This notice may not be removed or altered from any source distribution.
--- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
+-- SFML - Simple and Fast Multimedia Library
+-- Copyright (C) 2007-2015 Laurent Gomila (laurent@sfml-dev.org)
+-- This software is provided 'as-is', without any express or implied warranty.
+-- In no event will the authors be held liable for any damages arising from the use of this software.
+-- Permission is granted to anyone to use this software for any purpose,
+-- including commercial applications, and to alter it and redistribute it freely,
+-- subject to the following restrictions:
+-- 1. The origin of this software must not be misrepresented;
+--    you must not claim that you wrote the original software.
+--    If you use this software in a product, an acknowledgment
+--    in the product documentation would be appreciated but is not required.
+-- 2. Altered source versions must be plainly marked as such,
+--    and must not be misrepresented as being the original software.
+-- 3. This notice may not be removed or altered from any source distribution.
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
-with Sf.Config;
-with Sf.Network.Types;
+--//////////////////////////////////////////////////////////
+
+
+
+
 
 package Sf.Network.Packet is
-   use Sf.Config;
-   use Sf.Network.Types;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Create a new empty packet
-   -- ///
-   -- /// \return A new sfPacket object
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfPacket_Create return sfPacket_Ptr;
+   --//////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Destroy an existing packet
-   -- ///
-   -- /// \param Packet : Packet to delete
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfPacket_Destroy (Packet : sfPacket_Ptr);
+   --//////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
+   --/ @brief Create a new packet
+   --/
+   --/ @return A new sfPacket object
+   --/
+   --//////////////////////////////////////////////////////////
+   function create return sfPacket_Ptr;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Append data to the end of a packet
-   -- ///
-   -- /// \param Packet :      Packet to fill
-   -- /// \param Data :        Pointer to the bytes to append
-   -- /// \param SizeInBytes : Number of bytes to append
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfPacket_Append (Packet : sfPacket_Ptr; Data : sfVoid_Ptr; SizeInBytes : sfSize_t);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Create a new packet by copying an existing one
+   --/
+   --/ @param packet Packet to copy
+   --/
+   --/ @return A new sfPacket object which is a copy of @a packet
+   --/
+   --//////////////////////////////////////////////////////////
+   function copy (packet : sfPacket_Ptr) return sfPacket_Ptr;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Clear all the data of a packet
-   -- ///
-   -- /// \param Packet : Packet to clear
-   -- ///
-   -- ///////////////////////////////////////////////////////////
-   procedure sfPacket_Clear (Packet : sfPacket_Ptr);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Destroy a packet
+   --/
+   --/ @param packet Packet to destroy
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure destroy (packet : sfPacket_Ptr);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get a pointer to the data contained in a packet
-   -- /// Warning : the returned pointer may be invalid after you
-   -- /// append data to the packet
-   -- ///
-   -- /// \param Packet : Packet to get data from
-   -- ///
-   -- /// \return Pointer to the data
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfPacket_GetData (Packet : sfPacket_Ptr) return sfInt8_Ptr;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Append data to the end of a packet
+   --/
+   --/ @param packet      Packet object
+   --/ @param data        Pointer to the sequence of bytes to append
+   --/ @param sizeInBytes Number of bytes to append
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure append
+     (packet : sfPacket_Ptr;
+      data : Standard.System.Address;
+      sizeInBytes : sfSize_t);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get the size of the data contained in a packet
-   -- ///
-   -- /// \param Packet : Packet to get data size from
-   -- ///
-   -- /// \return Data size, in bytes
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfPacket_GetDataSize (Packet : sfPacket_Ptr) return sfSize_t;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Clear a packet
+   --/
+   --/ After calling Clear, the packet is empty.
+   --/
+   --/ @param packet Packet object
+   --/
+   --/////////////////////////////////////////////////////////
+   procedure clear (packet : sfPacket_Ptr);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Tell if the reading position has reached the end of the packet
-   -- ///
-   -- /// \param Packet : Packet to check
-   -- ///
-   -- /// \return sfTrue if all data have been read into the packet
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfPacket_EndOfPacket (Packet : sfPacket_Ptr) return sfBool;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Get a pointer to the data contained in a packet
+   --/
+   --/ Warning: the returned pointer may become invalid after
+   --/ you append data to the packet, therefore it should never
+   --/ be stored.
+   --/ The return pointer is NULL if the packet is empty.
+   --/
+   --/ @param packet Packet object
+   --/
+   --/ @return Pointer to the data
+   --/
+   --//////////////////////////////////////////////////////////
+   function getData (packet : sfPacket_Ptr) return sfPacket_Ptr;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Return the validity of packet
-   -- ///
-   -- /// \param Packet : Packet to check
-   -- ///
-   -- /// \return sfTrue if last data extraction from packet was successful
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfPacket_CanRead (Packet : sfPacket_Ptr) return sfBool;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Get the size of the data contained in a packet
+   --/
+   --/ This function returns the number of bytes pointed to by
+   --/ what sfPacket_getData returns.
+   --/
+   --/ @param packet Packet object
+   --/
+   --/ @return Data size, in bytes
+   --/
+   --//////////////////////////////////////////////////////////
+   function getDataSize (packet : sfPacket_Ptr) return sfSize_t;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Functions to extract data from a packet
-   -- ///
-   -- /// \param Packet : Packet to read
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfPacket_ReadBool (Packet : sfPacket_Ptr) return sfBool;
-   function sfPacket_ReadInt8 (Packet : sfPacket_Ptr) return sfInt8;
-   function sfPacket_ReadUint8 (Packet : sfPacket_Ptr) return sfUint8;
-   function sfPacket_ReadInt16 (Packet : sfPacket_Ptr) return sfInt16;
-   function sfPacket_ReadUint16 (Packet : sfPacket_Ptr) return sfUint16;
-   function sfPacket_ReadInt32 (Packet : sfPacket_Ptr) return sfInt32;
-   function sfPacket_ReadUint32 (Packet : sfPacket_Ptr) return sfUint32;
-   function sfPacket_ReadFloat (Packet : sfPacket_Ptr) return Float;
-   function sfPacket_ReadDouble (Packet : sfPacket_Ptr) return Long_Float;
-   procedure sfPacket_ReadString (Packet : sfPacket_Ptr; Str : out String);
-   procedure sfPacket_ReadWideString (Packet : sfPacket_Ptr; Str : sfUint32_Ptr);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Tell if the reading position has reached the
+   --/        end of a packet
+   --/
+   --/ This function is useful to know if there is some data
+   --/ left to be read, without actually reading it.
+   --/
+   --/ @param packet Packet object
+   --/
+   --/ @return sfTrue if all data was read, sfFalse otherwise
+   --/
+   --//////////////////////////////////////////////////////////
+   function endOfPacket (packet : sfPacket_Ptr) return sfBool;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Functions to insert data into a packet
-   -- ///
-   -- /// \param Packet : Packet to write
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfPacket_WriteBool (Packet : sfPacket_Ptr; arg2 : sfBool);
-   procedure sfPacket_WriteInt8 (Packet : sfPacket_Ptr; arg2 : sfInt8);
-   procedure sfPacket_WriteUint8 (Packet : sfPacket_Ptr; arg2 : sfUint8);
-   procedure sfPacket_WriteInt16 (Packet : sfPacket_Ptr; arg2 : sfInt16);
-   procedure sfPacket_WriteUint16 (Packet : sfPacket_Ptr; arg2 : sfUint16);
-   procedure sfPacket_WriteInt32 (Packet : sfPacket_Ptr; arg2 : sfInt32);
-   procedure sfPacket_WriteUint32 (Packet : sfPacket_Ptr; arg2 : sfUint32);
-   procedure sfPacket_WriteFloat (Packet : sfPacket_Ptr; arg2 : Float);
-   procedure sfPacket_WriteDouble (Packet : sfPacket_Ptr; arg2 : Long_Float);
-   procedure sfPacket_WriteString (Packet : sfPacket_Ptr; Str : String);
-   procedure sfPacket_WriteWideString (Packet : sfPacket_Ptr; Str : sfUint32_Ptr);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Test the validity of a packet, for reading
+   --/
+   --/ This function allows to test the packet, to check if
+   --/ a reading operation was successful.
+   --/
+   --/ A packet will be in an invalid state if it has no more
+   --/ data to read.
+   --/
+   --/ @param packet Packet object
+   --/
+   --/ @return sfTrue if last data extraction from packet was successful
+   --/
+   --//////////////////////////////////////////////////////////
+   function canRead (packet : sfPacket_Ptr) return sfBool;
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Functions to extract data from a packet
+   --/
+   --/ @param packet Packet object
+   --/
+   --//////////////////////////////////////////////////////////
+   function readBool (packet : sfPacket_Ptr) return sfBool;
+
+   function readInt8 (packet : sfPacket_Ptr) return sfInt8;
+
+   function readUint8 (packet : sfPacket_Ptr) return sfUint8;
+
+   function readInt16 (packet : sfPacket_Ptr) return sfInt16;
+
+   function readUint16 (packet : sfPacket_Ptr) return sfUint16;
+
+   function readInt32 (packet : sfPacket_Ptr) return sfInt32;
+
+   function readUint32 (packet : sfPacket_Ptr) return sfUint32;
+
+   function readFloat (packet : sfPacket_Ptr) return Float;
+
+   function readDouble (packet : sfPacket_Ptr) return Long_Float;
+
+   procedure readString (packet :     sfPacket_Ptr;
+                                  str    : out String);
+
+   procedure readWideString (packet : sfPacket_Ptr;
+                                      str    : sfUint32_Ptr);
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Functions to insert data into a packet
+   --/
+   --/ @param packet Packet object
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure writeBool (packet : sfPacket_Ptr; item : sfBool);
+
+   procedure writeInt8 (packet : sfPacket_Ptr; item : sfInt8);
+
+   procedure writeUint8 (packet : sfPacket_Ptr; item : sfUint8);
+
+   procedure writeInt16 (packet : sfPacket_Ptr; item : sfInt16);
+
+   procedure writeUint16 (packet : sfPacket_Ptr; item : sfUint16);
+
+   procedure writeInt32 (packet : sfPacket_Ptr; item : sfInt32);
+
+   procedure writeUint32 (packet : sfPacket_Ptr; item : sfUint32);
+
+   procedure writeFloat (packet : sfPacket_Ptr; item : Float);
+
+   procedure writeDouble (packet : sfPacket_Ptr; item : Long_Float);
+
+   procedure writeString (packet : sfPacket_Ptr; item : String);
+
+   procedure writeWideString (packet : sfPacket_Ptr; item : sfUint32_Ptr);
 
 private
 
-   pragma Import (C, sfPacket_Create, "sfPacket_Create");
-   pragma Import (C, sfPacket_Destroy, "sfPacket_Destroy");
-   pragma Import (C, sfPacket_Append, "sfPacket_Append");
-   pragma Import (C, sfPacket_Clear, "sfPacket_Clear");
-   pragma Import (C, sfPacket_GetData, "sfPacket_GetData");
-   pragma Import (C, sfPacket_GetDataSize, "sfPacket_GetDataSize");
-   pragma Import (C, sfPacket_EndOfPacket, "sfPacket_EndOfPacket");
-   pragma Import (C, sfPacket_CanRead, "sfPacket_CanRead");
-   pragma Import (C, sfPacket_ReadBool, "sfPacket_ReadBool");
-   pragma Import (C, sfPacket_ReadInt8, "sfPacket_ReadInt8");
-   pragma Import (C, sfPacket_ReadUint8, "sfPacket_ReadUint8");
-   pragma Import (C, sfPacket_ReadInt16, "sfPacket_ReadInt16");
-   pragma Import (C, sfPacket_ReadUint16, "sfPacket_ReadUint16");
-   pragma Import (C, sfPacket_ReadInt32, "sfPacket_ReadInt32");
-   pragma Import (C, sfPacket_ReadUint32, "sfPacket_ReadUint32");
-   pragma Import (C, sfPacket_ReadFloat, "sfPacket_ReadFloat");
-   pragma Import (C, sfPacket_ReadDouble, "sfPacket_ReadDouble");
-   pragma Import (C, sfPacket_ReadWideString, "sfPacket_ReadWideString");
-   pragma Import (C, sfPacket_WriteBool, "sfPacket_WriteBool");
-   pragma Import (C, sfPacket_WriteInt8, "sfPacket_WriteInt8");
-   pragma Import (C, sfPacket_WriteUint8, "sfPacket_WriteUint8");
-   pragma Import (C, sfPacket_WriteInt16, "sfPacket_WriteInt16");
-   pragma Import (C, sfPacket_WriteUint16, "sfPacket_WriteUint16");
-   pragma Import (C, sfPacket_WriteInt32, "sfPacket_WriteInt32");
-   pragma Import (C, sfPacket_WriteUint32, "sfPacket_WriteUint32");
-   pragma Import (C, sfPacket_WriteFloat, "sfPacket_WriteFloat");
-   pragma Import (C, sfPacket_WriteDouble, "sfPacket_WriteDouble");
-   pragma Import (C, sfPacket_WriteWideString, "sfPacket_WriteWideString");
+   pragma Import (C, create, "sfPacket_create");
+   pragma Import (C, copy, "sfPacket_copy");
+   pragma Import (C, destroy, "sfPacket_destroy");
+   pragma Import (C, append, "sfPacket_append");
+   pragma Import (C, clear, "sfPacket_clear");
+   pragma Import (C, getData, "sfPacket_getData");
+   pragma Import (C, getDataSize, "sfPacket_getDataSize");
+   pragma Import (C, endOfPacket, "sfPacket_endOfPacket");
+   pragma Import (C, canRead, "sfPacket_canRead");
+   pragma Import (C, readBool, "sfPacket_readBool");
+   pragma Import (C, readInt8, "sfPacket_readInt8");
+   pragma Import (C, readUint8, "sfPacket_readUint8");
+   pragma Import (C, readInt16, "sfPacket_readInt16");
+   pragma Import (C, readUint16, "sfPacket_readUint16");
+   pragma Import (C, readInt32, "sfPacket_readInt32");
+   pragma Import (C, readUint32, "sfPacket_readUint32");
+   pragma Import (C, readFloat, "sfPacket_readFloat");
+   pragma Import (C, readDouble, "sfPacket_readDouble");
+   pragma Import (C, readWideString, "sfPacket_readWideString");
+   pragma Import (C, writeBool, "sfPacket_writeBool");
+   pragma Import (C, writeInt8, "sfPacket_writeInt8");
+   pragma Import (C, writeUint8, "sfPacket_writeUint8");
+   pragma Import (C, writeInt16, "sfPacket_writeInt16");
+   pragma Import (C, writeUint16, "sfPacket_writeUint16");
+   pragma Import (C, writeInt32, "sfPacket_writeInt32");
+   pragma Import (C, writeUint32, "sfPacket_writeUint32");
+   pragma Import (C, writeFloat, "sfPacket_writeFloat");
+   pragma Import (C, writeDouble, "sfPacket_writeDouble");
+   pragma Import (C, writeWideString, "sfPacket_writeWideString");
+
 
 end Sf.Network.Packet;

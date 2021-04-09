@@ -1,348 +1,556 @@
--- ////////////////////////////////////////////////////////////
--- //
--- // SFML - Simple and Fast Multimedia Library
--- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
--- //
--- // This software is provided 'as-is', without any express or implied warranty.
--- // In no event will the authors be held liable for any damages arising from the use of this software.
--- //
--- // Permission is granted to anyone to use this software for any purpose,
--- // including commercial applications, and to alter it and redistribute it freely,
--- // subject to the following restrictions:
--- //
--- // 1. The origin of this software must not be misrepresented;
--- //    you must not claim that you wrote the original software.
--- //    If you use this software in a product, an acknowledgment
--- //    in the product documentation would be appreciated but is not required.
--- //
--- // 2. Altered source versions must be plainly marked as such,
--- //    and must not be misrepresented as being the original software.
--- //
--- // 3. This notice may not be removed or altered from any source distribution.
--- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
+-- SFML - Simple and Fast Multimedia Library
+-- Copyright (C) 2007-2018 Laurent Gomila (laurent@sfml-dev.org)
+-- This software is provided 'as-is', without any express or implied warranty.
+-- In no event will the authors be held liable for any damages arising from the use of this software.
+-- Permission is granted to anyone to use this software for any purpose,
+-- including commercial applications, and to alter it and redistribute it freely,
+-- subject to the following restrictions:
+-- 1. The origin of this software must not be misrepresented;
+--    you must not claim that you wrote the original software.
+--    If you use this software in a product, an acknowledgment
+--    in the product documentation would be appreciated but is not required.
+-- 2. Altered source versions must be plainly marked as such,
+--    and must not be misrepresented as being the original software.
+-- 3. This notice may not be removed or altered from any source distribution.
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
-with Sf.Config;
-with Sf.Window.Types;
 with Sf.Window.Event;
 with Sf.Window.VideoMode;
 with Sf.Window.WindowHandle;
+with Sf.System.Vector2;
 
 package Sf.Window.Window is
-   use Sf.Config;
-   use Sf.Window.Types;
-   use Sf.Window.Event;
-   use Sf.Window.VideoMode;
-   use Sf.Window.WindowHandle;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Enumeration of window creation styles
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   sfNone : constant sfUint32 := 0; -- ///< No border / title bar
-                                    --(this
-                                    --flag and all others are
-                                    --mutually
-                                    --exclusive)
-   sfTitlebar : constant sfUint32 := 1;   -- ///< Title bar +
-                                          --fixed border
-   sfResize : constant sfUint32 := 2;     -- ///< Titlebar +
-                                          --resizable
-                                          --border + maximize
-                                          --button
-   sfClose : constant sfUint32 := 4;   -- ///< Titlebar + close
-                                       --button
-   sfFullscreen : constant sfUint32 := 8;    -- ///< Fullscreen
-                                             --mode (this
-                                             --flag and all others
-                                             --are
-                                             --mutually exclusive)
+   --//////////////////////////////////////////////////////////
+   --/ @brief Enumeration of window creation styles
+   --/
+   --//////////////////////////////////////////////////////////
+   --/< No border / title bar (this flag and all others are mutually exclusive)
+   --/< Title bar + fixed border
+   --/< Titlebar + resizable border + maximize button
+   --/< Titlebar + close button
+   --/< Fullscreen mode (this flag and all others are mutually exclusive)
+   --/< Default window style
+   type sfWindowStyle is new sfUint32;
+   sfNone : constant sfWindowStyle := 0;
+   sfTitlebar : constant sfWindowStyle := 1;
+   sfResize : constant sfWindowStyle := 2;
+   sfClose : constant sfWindowStyle := 4;
+   sfFullscreen : constant sfWindowStyle := 8;
+   sfDefaultStyle : constant sfWindowStyle := 7;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Structure defining the window's creation settings
-   -- ////////////////////////////////////////////////////////////
-   type sfWindowSettings is record
-      DepthBits : aliased sfUint32;    -- ///< Bits of the
-                                       --depth buffer
-      StencilBits : aliased sfUint32;  -- ///< Bits of the
-                                       --stencil buffer
-      AntialiasingLevel : aliased sfUint32;  -- ///< Level of
-                                             --antialiasing
+   --//////////////////////////////////////////////////////////
+   --/ @brief Enumeration of the context attribute flags
+   --/
+   --//////////////////////////////////////////////////////////
+   --/< Non-debug, compatibility context (this and the core attribute are mutually exclusive)
+   --/< Core attribute
+   --/< Debug attribute
+   type sfContextAttribute is new sfUint32;
+   sfContextDefault : constant sfContextAttribute := 0;
+   sfContextCore : constant sfContextAttribute := 1;
+   sfContextDebug : constant sfContextAttribute := 4;
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Structure defining the window's creation settings
+   --/
+   --//////////////////////////////////////////////////////////
+   --/< Bits of the depth buffer
+   --/< Bits of the stencil buffer
+   --/< Level of antialiasing
+   --/< Major number of the context version to create
+   --/< Minor number of the context version to create
+   --/< The attribute flags to create the context with
+   --/< Whether the context framebuffer is sRGB capable
+   type sfContextSettings is record
+      depthBits : aliased sfUint32;
+      stencilBits : aliased sfUint32;
+      antialiasingLevel : aliased sfUint32;
+      majorVersion : aliased sfUint32;
+      minorVersion : aliased sfUint32;
+      attributeFlags : aliased sfUint32;
+      sRgbCapable : aliased sfBool;
    end record;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Construct a new window
-   -- ///
-   -- /// \param Mode :   Video mode to use
-   -- /// \param Title :  Title of the window
-   -- /// \param Style :  Window style
-   -- /// \param Params : Creation settings
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_Create
-     (Mode   : sfVideoMode;
-      Title  : String;
-      Style  : sfUint32         := sfResize or sfClose;
-      Params : sfWindowSettings := (24, 8, 0))
-      return   sfWindow_Ptr;
+   sfDefaultContextSettings : constant sfContextSettings;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Construct a window from an existing control
-   -- ///
-   -- /// \param Handle : Platform-specific handle of the control
-   -- /// \param Params : Creation settings
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_CreateFromHandle (Handle : sfWindowHandle; Params : sfWindowSettings) return sfWindow_Ptr;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Construct a new window
+   --/
+   --/ This function creates the window with the size and pixel
+   --/ depth defined in @a mode. An optional style can be passed to
+   --/ customize the look and behaviour of the window (borders,
+   --/ title bar, resizable, closable, ...). If @a style contains
+   --/ sfFullscreen, then @a mode must be a valid video mode.
+   --/
+   --/ The fourth parameter is a pointer to a structure specifying
+   --/ advanced OpenGL context settings such as antialiasing,
+   --/ depth-buffer bits, etc.
+   --/
+   --/ @param mode     Video mode to use (defines the width, height and depth of the rendering area of the window)
+   --/ @param title    Title of the window
+   --/ @param style    Window style
+   --/ @param settings Additional settings for the underlying OpenGL context
+   --/
+   --/ @return A new sfWindow object
+   --/
+   --//////////////////////////////////////////////////////////
+   function create
+     (mode     : Sf.Window.VideoMode.sfVideoMode;
+      title    : String;
+      style    : sfWindowStyle     := sfResize or sfClose;
+      settings : sfContextSettings := sfDefaultContextSettings)
+     return sfWindow_Ptr;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Destroy an existing window
-   -- ///
-   -- /// \param Window : Window to destroy
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_Destroy (Window : sfWindow_Ptr);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Close a window (but doesn't destroy the internal data)
-   -- ///
-   -- /// \param Window : Window to close
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_Close (Window : sfWindow_Ptr);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Construct a new window (with a UTF-32 title)
+   --/
+   --/ This function creates the window with the size and pixel
+   --/ depth defined in @a mode. An optional style can be passed to
+   --/ customize the look and behaviour of the window (borders,
+   --/ title bar, resizable, closable, ...). If @a style contains
+   --/ sfFullscreen, then @a mode must be a valid video mode.
+   --/
+   --/ The fourth parameter is a pointer to a structure specifying
+   --/ advanced OpenGL context settings such as antialiasing,
+   --/ depth-buffer bits, etc.
+   --/
+   --/ @param mode     Video mode to use (defines the width, height and depth of the rendering area of the window)
+   --/ @param title    Title of the window (UTF-32)
+   --/ @param style    Window style
+   --/ @param settings Additional settings for the underlying OpenGL context
+   --/
+   --/ @return A new sfWindow object
+   --/
+   --//////////////////////////////////////////////////////////
+   function createUnicode
+     (mode : Sf.Window.VideoMode.sfVideoMode;
+      title : access sfUint32;
+      style : sfUint32;
+      settings : access constant sfContextSettings) return sfWindow_Ptr;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Tell whether or not a window is opened
-   -- ///
-   -- /// \param Window : Window object
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_IsOpened (Window : sfWindow_Ptr) return sfBool;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Construct a window from an existing control
+   --/
+   --/ Use this constructor if you want to create an OpenGL
+   --/ rendering area into an already existing control.
+   --/
+   --/ The second parameter is a pointer to a structure specifying
+   --/ advanced OpenGL context settings such as antialiasing,
+   --/ depth-buffer bits, etc.
+   --/
+   --/ @param handle   Platform-specific handle of the control
+   --/ @param settings Additional settings for the underlying OpenGL context
+   --/
+   --/ @return A new sfWindow object
+   --/
+   --//////////////////////////////////////////////////////////
+   function createFromHandle (handle : Sf.Window.WindowHandle.sfWindowHandle; settings : access constant sfContextSettings) return sfWindow_Ptr;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get the width of the rendering region of a window
-   -- ///
-   -- /// \param Window : Window object
-   -- ///
-   -- /// \return Width in pixels
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_GetWidth (Window : sfWindow_Ptr) return sfUint32;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Destroy a window
+   --/
+   --/ @param window Window to destroy
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure destroy (window : sfWindow_Ptr);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get the height of the rendering region of a window
-   -- ///
-   -- /// \param Window : Window object
-   -- ///
-   -- /// \return Height in pixels
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_GetHeight (Window : sfWindow_Ptr) return sfUint32;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Close a window and destroy all the attached resources
+   --/
+   --/ After calling this function, the sfWindow object remains
+   --/ valid, you must call sfWindow_destroy to actually delete it.
+   --/ All other functions such as sfWindow_pollEvent or sfWindow_display
+   --/ will still work (i.e. you don't have to test sfWindow_isOpen
+   --/ every time), and will have no effect on closed windows.
+   --/
+   --/ @param window Window object
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure close (window : sfWindow_Ptr);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get the creation settings of a window
-   -- ///
-   -- /// \param Window : Window object
-   -- ///
-   -- /// \return Settings used to create the window
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_GetSettings (Window : sfWindow_Ptr) return sfWindowSettings;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Tell whether or not a window is opened
+   --/
+   --/ This function returns whether or not the window exists.
+   --/ Note that a hidden window (sfWindow_setVisible(sfFalse)) will return
+   --/ sfTrue.
+   --/
+   --/ @param window Window object
+   --/
+   --/ @return sfTrue if the window is opened, sfFalse if it has been closed
+   --/
+   --//////////////////////////////////////////////////////////
+   function isOpen (window : sfWindow_Ptr) return sfBool;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get the event on top of events stack of a window, if
-   --any, and pop it
-   -- ///
-   -- /// \param Window : Window object
-   -- /// \param Event :  Event to fill, if any
-   -- ///
-   -- /// \return sfTrue if an event was returned, sfFalse if
-   --events stack was
-   --empty
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_GetEvent (Window : sfWindow_Ptr; Event : access sfEvent) return sfBool;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Get the settings of the OpenGL context of a window
+   --/
+   --/ Note that these settings may be different from what was
+   --/ passed to the sfWindow_create function,
+   --/ if one or more settings were not supported. In this case,
+   --/ SFML chose the closest match.
+   --/
+   --/ @param window Window object
+   --/
+   --/ @return Structure containing the OpenGL context settings
+   --/
+   --//////////////////////////////////////////////////////////
+   function getSettings (window : sfWindow_Ptr) return sfContextSettings;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Enable / disable vertical synchronization on a window
-   -- ///
-   -- /// \param Window :  Window object
-   -- /// \param Enabled : sfTrue to enable v-sync, sfFalse to
-   --deactivate
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_UseVerticalSync (Window : sfWindow_Ptr; Enabled : sfBool);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Pop the event on top of event queue, if any, and return it
+   --/
+   --/ This function is not blocking: if there's no pending event then
+   --/ it will return false and leave @a event unmodified.
+   --/ Note that more than one event may be present in the event queue,
+   --/ thus you should always call this function in a loop
+   --/ to make sure that you process every pending event.
+   --/
+   --/ @param window Window object
+   --/ @param event  Event to be returned
+   --/
+   --/ @return sfTrue if an event was returned, or sfFalse if the event queue was empty
+   --/
+   --//////////////////////////////////////////////////////////
+   function pollEvent (window :        sfWindow_Ptr;
+                                event  : access Sf.Window.Event.sfEvent) return sfBool;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Show or hide the mouse cursor on a window
-   -- ///
-   -- /// \param Window : Window object
-   -- /// \param Show :   sfTrue to show, sfFalse to hide
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_ShowMouseCursor (Window : sfWindow_Ptr; Show : sfBool);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Wait for an event and return it
+   --/
+   --/ This function is blocking: if there's no pending event then
+   --/ it will wait until an event is received.
+   --/ After this function returns (and no error occured),
+   --/ the @a event object is always valid and filled properly.
+   --/ This function is typically used when you have a thread that
+   --/ is dedicated to events handling: you want to make this thread
+   --/ sleep as long as no new event is received.
+   --/
+   --/ @param window Window object
+   --/ @param event  Event to be returned
+   --/
+   --/ @return sfFalse if any error occured
+   --/
+   --//////////////////////////////////////////////////////////
+   function waitEvent (window :        sfWindow_Ptr;
+                                event  : access Sf.Window.Event.sfEvent) return sfBool;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Change the position of the mouse cursor on a window
-   -- ///
-   -- /// \param Window : Window object
-   -- /// \param Left :   Left coordinate of the cursor, relative
-   --to the window
-   -- /// \param Top :    Top coordinate of the cursor, relative
-   --to the window
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_SetCursorPosition (Window : sfWindow_Ptr; Left : sfUint32; Top : sfUint32);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Get the position of a window
+   --/
+   --/ @param window Window object
+   --/
+   --/ @return Position in pixels
+   --/
+   --//////////////////////////////////////////////////////////
+   function getPosition (window : sfWindow_Ptr) return Sf.System.Vector2.sfVector2i;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Change the position of a window on screen.
-   -- /// Only works for top-level windows
-   -- ///
-   -- /// \param Window : Window object
-   -- /// \param Left :   Left position
-   -- /// \param Top :    Top position
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_SetPosition (Window : sfWindow_Ptr; Left : Integer; Top : Integer);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Change the position of a window on screen
+   --/
+   --/ This function only works for top-level windows
+   --/ (i.e. it will be ignored for windows created from
+   --/ the handle of a child window/control).
+   --/
+   --/ @param window   Window object
+   --/ @param position New position of the window, in pixels
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setPosition (window   : sfWindow_Ptr;
+                                   position : Sf.System.Vector2.sfVector2i);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Change the size of the rendering region of a window
-   -- ///
-   -- /// \param Window : Window object
-   -- /// \param Width :  New Width
-   -- /// \param Height : New Height
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_SetSize (Window : sfWindow_Ptr; Width : sfUint32; Height : sfUint32);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Get the size of the rendering region of a window
+   --/
+   --/ The size doesn't include the titlebar and borders
+   --/ of the window.
+   --/
+   --/ @param window Window object
+   --/
+   --/ @return Size in pixels
+   --/
+   --//////////////////////////////////////////////////////////
+   function getSize (window : sfWindow_Ptr) return Sf.System.Vector2.sfVector2u;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Show or hide a window
-   -- ///
-   -- /// \param Window : Window object
-   -- /// \param State :  sfTrue to show, sfFalse to hide
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_Show (Window : sfWindow_Ptr; State : sfBool);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Change the size of the rendering region of a window
+   --/
+   --/ @param window Window object
+   --/ @param size   New size, in pixels
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setSize (window : sfWindow_Ptr;
+                               size   : Sf.System.Vector2.sfVector2u);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Enable or disable automatic key-repeat for keydown
-   --events.
-   -- /// Automatic key-repeat is enabled by default
-   -- ///
-   -- /// \param Window :  Window object
-   -- /// \param Enabled : sfTrue to enable, sfFalse to disable
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_EnableKeyRepeat (Window : sfWindow_Ptr; Enabled : sfBool);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Change the title of a window
+   --/
+   --/ @param window Window object
+   --/ @param title  New title
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setTitle (window : sfWindow_Ptr; title : String);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Change the window's icon
-   -- ///
-   -- /// \param Window : Window object
-   -- /// \param Width :  Icon's width, in pixels
-   -- /// \param Height : Icon's height, in pixels
-   -- /// \param Pixels : Pointer to the pixels in memory, format
-   --must be RGBA
-   --32 bits
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_SetIcon
-     (Window : sfWindow_Ptr;
-      Width  : sfUint32;
-      Height : sfUint32;
-      Pixels : sfUint8_Ptr);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Change the title of a window (with a UTF-32 string)
+   --/
+   --/ @param window Window object
+   --/ @param title  New title
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setUnicodeTitle (window :        sfWindow_Ptr;
+                                       title  : access sfUint32);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Activate or deactivate a window as the current target
-   --for rendering
-   -- ///
-   -- /// \param Window : Window object
-   -- /// \param Active : sfTrue to activate, sfFalse to deactivate
-   -- ///
-   -- /// \return True if operation was successful, false otherwise
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_SetActive (Window : sfWindow_Ptr; Active : sfBool) return sfBool;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Change a window's icon
+   --/
+   --/ @a pixels must be an array of @a width x @a height pixels
+   --/ in 32-bits RGBA format.
+   --/
+   --/ @param window Window object
+   --/ @param width  Icon's width, in pixels
+   --/ @param height Icon's height, in pixels
+   --/ @param pixels Pointer to the array of pixels in memory
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setIcon
+     (window : sfWindow_Ptr;
+      width : sfUint32;
+      height : sfUint32;
+      pixels : access sfUint8);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Display a window on screen
-   -- ///
-   -- /// \param Window : Window object
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_Display (Window : sfWindow_Ptr);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Show or hide a window
+   --/
+   --/ @param window  Window object
+   --/ @param visible sfTrue to show the window, sfFalse to hide it
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setVisible (window : sfWindow_Ptr; visible : sfBool);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get the input manager of a window
-   -- ///
-   -- /// \param Window : Window object
-   -- ///
-   -- /// \return Reference to the input
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_GetInput (Window : sfWindow_Ptr) return sfInput_Ptr;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Enable or disable vertical synchronization
+   --/
+   --/ Activating vertical synchronization will limit the number
+   --/ of frames displayed to the refresh rate of the monitor.
+   --/ This can avoid some visual artifacts, and limit the framerate
+   --/ to a good value (but not constant across different computers).
+   --/
+   --/ @param window  Window object
+   --/ @param enabled sfTrue to enable v-sync, sfFalse to deactivate
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setVerticalSyncEnabled (window  : sfWindow_Ptr;
+                                              enabled : sfBool);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Limit the framerate to a maximum fixed frequency for a
-   --window
-   -- ///
-   -- /// \param Window : Window object
-   -- ///
-   -- /// \param Limit : Framerate limit, in frames per seconds
-   --(use 0 to
-   --disable limit)
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_SetFramerateLimit (Window : sfWindow_Ptr; Limit : sfUint32);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Show or hide the mouse cursor
+   --/
+   --/ @param window  Window object
+   --/ @param visible sfTrue to show, sfFalse to hide
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setMouseCursorVisible (window  : sfWindow_Ptr;
+                                             visible : sfBool);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Get time elapsed since last frame of a window
-   -- ///
-   -- /// \param Window : Window object
-   -- ///
-   -- /// \return Time elapsed, in seconds
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_GetFrameTime (Window : sfWindow_Ptr) return Float;
+   --//////////////////////////////////////////////////////////
+   --/ @brief Grab or release the mouse cursor
+   --/
+   --/ If set, grabs the mouse cursor inside this window's client
+   --/ area so it may no longer be moved outside its bounds.
+   --/ Note that grabbing is only active while the window has
+   --/ focus and calling this function for fullscreen windows
+   --/ won't have any effect (fullscreen windows always grab the
+   --/ cursor).
+   --/
+   --/ @param grabbed sfTrue to enable, sfFalse to disable
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setMouseCursorGrabbed (window  : sfWindow_Ptr;
+                                             grabbed : sfBool);
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Change the joystick threshold, ie. the value below which
-   -- /// no move event will be generated
-   -- ///
-   -- /// \param Window :    Window object
-   -- /// \param Threshold : New threshold, in range [0, 100]
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfWindow_SetJoystickThreshold (Window : sfWindow_Ptr; Threshold : Float);
+   --//////////////////////////////////////////////////////////
+   --/ @brief Set the displayed cursor to a native system cursor
+   --/
+   --/ Upon window creation, the arrow cursor is used by default.
+   --/
+   --/ @warning The cursor must not be destroyed while in use by
+   --/          the window.
+   --/
+   --/ @warning Features related to Cursor are not supported on
+   --/          iOS and Android.
+   --/
+   --/ @param window Window object
+   --/ @param cursor Native system cursor type to display
+   --/
+   --/ @see sfCursor_createFromSystem
+   --/ @see sfCursor_createFromPixels
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setMouseCursor (window : sfWindow_Ptr; cursor : sfCursor_Ptr);
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Enable or disable automatic key-repeat
+   --/
+   --/ If key repeat is enabled, you will receive repeated
+   --/ KeyPress events while keeping a key pressed. If it is disabled,
+   --/ you will only get a single event when the key is pressed.
+   --/
+   --/ Key repeat is enabled by default.
+   --/
+   --/ @param window  Window object
+   --/ @param enabled sfTrue to enable, sfFalse to disable
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setKeyRepeatEnabled (window  : sfWindow_Ptr;
+                                           enabled : sfBool);
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Limit the framerate to a maximum fixed frequency
+   --/
+   --/ If a limit is set, the window will use a small delay after
+   --/ each call to sfWindow_display to ensure that the current frame
+   --/ lasted long enough to match the framerate limit.
+   --/
+   --/ @param window Window object
+   --/ @param limit  Framerate limit, in frames per seconds (use 0 to disable limit)
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setFramerateLimit (window : sfWindow_Ptr;
+                                         limit  : sfUint32);
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Change the joystick threshold
+   --/
+   --/ The joystick threshold is the value below which
+   --/ no JoyMoved event will be generated.
+   --/
+   --/ @param window    Window object
+   --/ @param threshold New threshold, in the range [0, 100]
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setJoystickThreshold (window    : sfWindow_Ptr;
+                                            threshold : Float);
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Activate or deactivate a window as the current target
+   --/        for OpenGL rendering
+   --/
+   --/ A window is active only on the current thread, if you want to
+   --/ make it active on another thread you have to deactivate it
+   --/ on the previous thread first if it was active.
+   --/ Only one window can be active on a thread at a time, thus
+   --/ the window previously active (if any) automatically gets deactivated.
+   --/ This is not to be confused with sfWindow_requestFocus().
+   --/
+   --/ @param window Window object
+   --/ @param active sfTrue to activate, sfFalse to deactivate
+   --/
+   --/ @return sfTrue if operation was successful, sfFalse otherwise
+   --/
+   --//////////////////////////////////////////////////////////
+   function setActive (window : sfWindow_Ptr;
+                                active : sfBool) return sfBool;
+
+   --/////////////////////////////////////////////////////////
+   --/ @brief Request the current window to be made the active
+   --/ foreground window
+   --/
+   --/ At any given time, only one window may have the input focus
+   --/ to receive input events such as keystrokes or mouse events.
+   --/ If a window requests focus, it only hints to the operating
+   --/ system, that it would like to be focused. The operating system
+   --/ is free to deny the request.
+   --/ This is not to be confused with sfWindow_setActive().
+   --/
+   --/////////////////////////////////////////////////////////
+   procedure requestFocus (window : sfWindow_Ptr);
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Check whether the window has the input focus
+   --/
+   --/ At any given time, only one window may have the input focus
+   --/ to receive input events such as keystrokes or most mouse
+   --/ events.
+   --/
+   --/ @return True if window has focus, false otherwise
+   --/
+   --//////////////////////////////////////////////////////////
+   function hasFocus (window : sfWindow_Ptr) return sfBool;
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Display on screen what has been rendered to the
+   --/        window so far
+   --/
+   --/ This function is typically called after all OpenGL rendering
+   --/ has been done for the current frame, in order to show
+   --/ it on screen.
+   --/
+   --/ @param window Window object
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure display (window : sfWindow_Ptr);
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Get the OS-specific handle of the window
+   --/
+   --/ The type of the returned handle is sfWindowHandle,
+   --/ which is a typedef to the handle type defined by the OS.
+   --/ You shouldn't need to use this function, unless you have
+   --/ very specific stuff to implement that SFML doesn't support,
+   --/ or implement a temporary workaround until a bug is fixed.
+   --/
+   --/ @param window Window object
+   --/
+   --/ @return System handle of the window
+   --/
+   --//////////////////////////////////////////////////////////
+   function getSystemHandle
+     (window : sfWindow_Ptr)
+     return Sf.Window.WindowHandle.sfWindowHandle;
 
 private
 
-   pragma Convention (C_Pass_By_Copy, sfWindowSettings);
+   pragma Convention (C, sfContextSettings);
 
-   pragma Import (C, sfWindow_CreateFromHandle, "sfWindow_CreateFromHandle");
-   pragma Import (C, sfWindow_Destroy, "sfWindow_Destroy");
-   pragma Import (C, sfWindow_Close, "sfWindow_Close");
-   pragma Import (C, sfWindow_IsOpened, "sfWindow_IsOpened");
-   pragma Import (C, sfWindow_GetWidth, "sfWindow_GetWidth");
-   pragma Import (C, sfWindow_GetHeight, "sfWindow_GetHeight");
-   pragma Import (C, sfWindow_GetSettings, "sfWindow_GetSettings");
-   pragma Import (C, sfWindow_GetEvent, "sfWindow_GetEvent");
-   pragma Import (C, sfWindow_UseVerticalSync, "sfWindow_UseVerticalSync");
-   pragma Import (C, sfWindow_ShowMouseCursor, "sfWindow_ShowMouseCursor");
-   pragma Import (C, sfWindow_SetCursorPosition, "sfWindow_SetCursorPosition");
-   pragma Import (C, sfWindow_SetPosition, "sfWindow_SetPosition");
-   pragma Import (C, sfWindow_SetSize, "sfWindow_SetSize");
-   pragma Import (C, sfWindow_Show, "sfWindow_Show");
-   pragma Import (C, sfWindow_EnableKeyRepeat, "sfWindow_EnableKeyRepeat");
-   pragma Import (C, sfWindow_SetIcon, "sfWindow_SetIcon");
-   pragma Import (C, sfWindow_SetActive, "sfWindow_SetActive");
-   pragma Import (C, sfWindow_Display, "sfWindow_Display");
-   pragma Import (C, sfWindow_GetInput, "sfWindow_GetInput");
-   pragma Import (C, sfWindow_SetFramerateLimit, "sfWindow_SetFramerateLimit");
-   pragma Import (C, sfWindow_GetFrameTime, "sfWindow_GetFrameTime");
-   pragma Import (C, sfWindow_SetJoystickThreshold, "sfWindow_SetJoystickThreshold");
+   sfDefaultContextSettings : constant sfContextSettings :=
+     (depthBits =>  24,
+      stencilBits => 8,
+      antialiasingLevel => 0,
+      majorVersion => 1,
+      minorVersion => 0,
+      attributeFlags => 0,
+      sRgbCapable => sfTrue);
+
+   pragma Import (C, createUnicode, "sfWindow_createUnicode");
+   pragma Import (C, createFromHandle, "sfWindow_createFromHandle");
+   pragma Import (C, destroy, "sfWindow_destroy");
+   pragma Import (C, close, "sfWindow_close");
+   pragma Import (C, isOpen, "sfWindow_isOpen");
+   pragma Import (C, getSettings, "sfWindow_getSettings");
+   pragma Import (C, pollEvent, "sfWindow_pollEvent");
+   pragma Import (C, waitEvent, "sfWindow_waitEvent");
+   pragma Import (C, getPosition, "sfWindow_getPosition");
+   pragma Import (C, setPosition, "sfWindow_setPosition");
+   pragma Import (C, getSize, "sfWindow_getSize");
+   pragma Import (C, setSize, "sfWindow_setSize");
+   pragma Import (C, setUnicodeTitle, "sfWindow_setUnicodeTitle");
+   pragma Import (C, setIcon, "sfWindow_setIcon");
+   pragma Import (C, setVisible, "sfWindow_setVisible");
+   pragma Import (C, setVerticalSyncEnabled, "sfWindow_setVerticalSyncEnabled");
+   pragma Import (C, setMouseCursorVisible, "sfWindow_setMouseCursorVisible");
+   pragma Import (C, setMouseCursorGrabbed, "sfWindow_setMouseCursorGrabbed");
+   pragma Import (C, setMouseCursor, "sfWindow_setMouseCursor");
+   pragma Import (C, setKeyRepeatEnabled, "sfWindow_setKeyRepeatEnabled");
+   pragma Import (C, setFramerateLimit, "sfWindow_setFramerateLimit");
+   pragma Import (C, setJoystickThreshold, "sfWindow_setJoystickThreshold");
+   pragma Import (C, setActive, "sfWindow_setActive");
+   pragma Import (C, requestFocus, "sfWindow_requestFocus");
+   pragma Import (C, hasFocus, "sfWindow_hasFocus");
+   pragma Import (C, display, "sfWindow_display");
+   pragma Import (C, getSystemHandle, "sfWindow_getSystemHandle");
 
 end Sf.Window.Window;

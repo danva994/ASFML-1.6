@@ -1,4 +1,4 @@
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 -- //
 -- // SFML - Simple and Fast Multimedia Library
 -- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
@@ -20,44 +20,69 @@
 -- //
 -- // 3. This notice may not be removed or altered from any source distribution.
 -- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
 with Interfaces.C.Strings;
 
 package body Sf.Window.Window is
    use Interfaces.C.Strings;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Construct a new window
-   -- ///
-   -- /// \param Mode :   Video mode to use
-   -- /// \param Title :  Title of the window
-   -- /// \param Style :  Window style
-   -- /// \param Params : Creation settings
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfWindow_Create
-     (Mode   : sfVideoMode;
-      Title  : String;
-      Style  : sfUint32         := sfResize or sfClose;
-      Params : sfWindowSettings := (24, 8, 0))
+   --//////////////////////////////////////////////////////////
+   --/ @brief Construct a new window
+   --/
+   --/ This function creates the window with the size and pixel
+   --/ depth defined in @a mode. An optional style can be passed to
+   --/ customize the look and behaviour of the window (borders,
+   --/ title bar, resizable, closable, ...). If @a style contains
+   --/ sfFullscreen, then @a mode must be a valid video mode.
+   --/
+   --/ The fourth parameter is a pointer to a structure specifying
+   --/ advanced OpenGL context settings such as antialiasing,
+   --/ depth-buffer bits, etc.
+   --/
+   --/ @param mode     Video mode to use (defines the width, height and depth of the rendering area of the window)
+   --/ @param title    Title of the window
+   --/ @param style    Window style
+   --/ @param settings Additional settings for the underlying OpenGL context
+   --/
+   --/ @return A new sfWindow object
+   --/
+   --//////////////////////////////////////////////////////////
+   function create
+     (mode     : Sf.Window.VideoMode.sfVideoMode;
+      title    : String;
+      style    : sfWindowStyle := sfResize or sfClose;
+      settings : sfContextSettings := sfDefaultContextSettings)
       return   sfWindow_Ptr
    is
       function Internal
-        (Mode   : sfVideoMode;
-         Title  : chars_ptr;
-         Style  : sfUint32;
-         Params : sfWindowSettings)
+        (Mode   : Sf.Window.VideoMode.sfVideoMode;
+         Title  : Interfaces.C.char_array;
+         Style  : sfWindowStyle;
+         Params : sfContextSettings)
          return   sfWindow_Ptr;
-      pragma Import (C, Internal, "sfWindow_Create");
-      Temp : chars_ptr    := New_String (Title);
-      R    : sfWindow_Ptr := Internal (Mode, Temp, Style, Params);
+      pragma Import (C, Internal, "sfWindow_create");
+      R    : sfWindow_Ptr := Internal (mode, Interfaces.C.To_C (Title), style, settings);
    begin
-      Free (Temp);
       return R;
-   end sfWindow_Create;
+   end Create;
+
+
+   --//////////////////////////////////////////////////////////
+   --/ @brief Change the title of a window
+   --/
+   --/ @param window Window object
+   --/ @param title  New title
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure setTitle (window : sfWindow_Ptr; title : Standard.String) is
+
+      procedure Internal (window : sfWindow_Ptr; title : Interfaces.C.Strings.chars_ptr);
+      pragma Import (C, Internal, "sfWindow_setTitle");
+      Temp : chars_ptr    := New_String (Title);
+   begin
+      Internal (window, Temp);
+      Free (Temp);
+   end setTitle;
 
 end Sf.Window.Window;

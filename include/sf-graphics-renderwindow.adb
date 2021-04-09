@@ -1,4 +1,4 @@
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 -- //
 -- // SFML - Simple and Fast Multimedia Library
 -- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
@@ -20,44 +20,65 @@
 -- //
 -- // 3. This notice may not be removed or altered from any source distribution.
 -- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
+
+--//////////////////////////////////////////////////////////
 with Interfaces.C.Strings;
 
 package body Sf.Graphics.RenderWindow is
    use Interfaces.C.Strings;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Construct a new renderwindow
-   -- ///
-   -- /// \param Mode :   Video mode to use
-   -- /// \param Title :  Title of the window
-   -- /// \param Style :  Window style
-   -- /// \param Params : Creation settings
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   function sfRenderWindow_Create
-     (Mode   : sfVideoMode;
-      Title  : Standard.String;
-      Style  : sfUint32         := sfResize or sfClose;
-      Params : sfWindowSettings := (24, 8, 0))
-      return   sfRenderWindow_Ptr
+   --//////////////////////////////////////////////////////////
+   --/ Construct a new renderwindow
+   --/
+   --/ @param Mode     Video mode to use
+   --/ @param Title    Title of the window
+   --/ @param Style    Window style
+   --/ @param Params   Creation settings
+   --/
+   --//////////////////////////////////////////////////////////
+   function create
+     (mode     : Sf.Window.VideoMode.sfVideoMode;
+      title    : Standard.String;
+      style    : Sf.Window.Window.sfWindowStyle :=
+        Sf.Window.Window.sfResize or Sf.Window.Window.sfClose;
+      settings : Sf.Window.Window.sfContextSettings := Sf.Window.Window.sfDefaultContextSettings)
+     return   sfRenderWindow_Ptr
    is
       function Internal
-        (Mode   : sfVideoMode;
-         Title  : chars_ptr;
-         Style  : sfUint32;
-         Params : sfWindowSettings)
+        (mode   : Sf.Window.VideoMode.sfVideoMode;
+         title  : chars_ptr;
+         style  : Sf.Window.Window.sfWindowStyle;
+         settings : Sf.Window.Window.sfContextSettings)
          return   sfRenderWindow_Ptr;
-      pragma Import (C, Internal, "sfRenderWindow_Create");
+      pragma Import (C, Internal, "sfRenderWindow_create");
       Temp : chars_ptr          := New_String (Title);
-      R    : sfRenderWindow_Ptr := Internal (Mode, Temp, Style, Params);
+      R    : sfRenderWindow_Ptr := Internal (mode, Temp, style, settings);
    begin
       Free (Temp);
       return R;
-   end sfRenderWindow_Create;
+   end Create;
+
+
+  --//////////////////////////////////////////////////////////
+  --/ @brief Change the title of a render window
+  --/
+  --/ @param renderWindow Render window object
+  --/ @param title        New title
+  --/
+  --//////////////////////////////////////////////////////////
+   procedure setTitle (renderWindow : sfRenderWindow_Ptr; title : Standard.String)
+   is
+      procedure Internal
+        (renderWindow : sfRenderWindow_Ptr;
+        Title  : chars_ptr);
+      pragma Import (C, Internal, "sfRenderWindow_setTitle");
+      Temp : chars_ptr          := New_String (Title);
+   begin
+      Internal (renderWindow, Temp);
+      Free (Temp);
+   end setTitle;
 
 end Sf.Graphics.RenderWindow;

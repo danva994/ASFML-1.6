@@ -1,8 +1,10 @@
-with Ada.Text_IO;       use Ada.Text_IO;
-with Ada.Float_Text_IO; use Ada.Float_Text_IO;
-with Sf.System.Clock;   use Sf.System.Clock;
-with Sf.System.Sleep;   use Sf.System.Sleep;
-with Sf.System.Types;   use Sf.System.Types;
+with Ada.Text_IO;         use Ada.Text_IO;
+with Ada.Float_Text_IO;   use Ada.Float_Text_IO;
+with Ada.Integer_Text_IO; use Ada.Integer_Text_IO;
+
+with Sf.System.Clock;     use Sf.System, Sf.System.Clock;
+with Sf.System.Sleep;     use Sf.System.Sleep;
+with Sf.System.Time;      use Sf.System.Time;
 
 procedure Main is
 
@@ -10,12 +12,18 @@ procedure Main is
 
 begin
 
-   My_Clock := sfClock_Create;
-   sfSleep (0.05);
+   My_Clock := Create;
+   sfDelay(0.05);
    Put ("Time elapsed(s): ");
-   Put (sfClock_GetTime (My_Clock), 0, 3, 0);
+   Put (asSeconds (GetElapsedTime (My_Clock)), Fore => 0, Aft => 3, Exp => 0);
    New_Line;
-   sfClock_Reset (My_Clock);
-   sfClock_Destroy (My_Clock);
+   Put ("Time elapsed(ms) since start: ");
+   Put (Integer (asMilliseconds (Restart (My_Clock))));
+   New_Line;
+   sfSleep(sfMilliseconds(1050));
+   Put ("Time elapsed(ms): ");
+   Put (Integer (asMilliseconds (GetElapsedTime (My_Clock))));
+   New_Line;
+   Destroy (My_Clock);
 
 end Main;

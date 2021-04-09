@@ -1,4 +1,4 @@
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 -- //
 -- // SFML - Simple and Fast Multimedia Library
 -- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
@@ -20,24 +20,24 @@
 -- //
 -- // 3. This notice may not be removed or altered from any source distribution.
 -- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
+
+--//////////////////////////////////////////////////////////
 with Sf.Window.GL;
 
 package Sf.Window.GLU is
    use Sf.Window.GL;
 
-   -- ////////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
    -- // Define portable types
-   -- ////////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
    type u_GLUfuncptr is access procedure;
 
-   -- ////////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
    -- // Define constants
-   -- ////////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
    GLU_FALSE                      : constant GLboolean := 0;
    GLU_TRUE                       : constant GLboolean := 1;
    GLU_VERSION_1_1                : constant GLenum    := 1;
@@ -156,9 +156,9 @@ package Sf.Window.GLU is
    GLU_INCOMPATIBLE_GL_VERSION    : constant GLenum    := 100903;
    GLU_TESS_MAX_COORD             : constant GLenum    := GLenum'LAST;
 
-   -- ////////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
    -- // GLU functions
-   -- ////////////////////////////////////////////////////////////
+   --//////////////////////////////////////////////////////////
    procedure gluBeginCurve (nurb : GLvoid_Ptr);
    procedure gluBeginPolygon (tess : GLvoid_Ptr);
    procedure gluBeginSurface (nurb : GLvoid_Ptr);
@@ -170,7 +170,7 @@ package Sf.Window.GLU is
       format         : GLenum;
       c_type         : GLenum;
       data           : GLvoid_Ptr)
-      return           GLint;
+     return           GLint;
    function gluBuild2DMipmaps
      (target         : GLenum;
       internalFormat : GLint;
@@ -179,7 +179,7 @@ package Sf.Window.GLU is
       format         : GLenum;
       c_type         : GLenum;
       data           : GLvoid_Ptr)
-      return           GLint;
+     return           GLint;
    procedure gluCylinder
      (quad   : GLvoid_Ptr;
       base   : GLdouble;
@@ -280,7 +280,7 @@ package Sf.Window.GLU is
       winX  : access GLdouble;
       winY  : access GLdouble;
       winZ  : access GLdouble)
-      return  GLint;
+     return  GLint;
    procedure gluPwlCurve
      (nurb   : GLvoid_Ptr;
       count  : GLint;
@@ -302,7 +302,7 @@ package Sf.Window.GLU is
       hOut    : GLsizei;
       typeOut : GLenum;
       dataOut : GLvoid_Ptr)
-      return    GLint;
+     return    GLint;
    procedure gluSphere
      (quad   : GLvoid_Ptr;
       radius : GLdouble;
@@ -330,7 +330,7 @@ package Sf.Window.GLU is
       objX  : access GLdouble;
       objY  : access GLdouble;
       objZ  : access GLdouble)
-      return  GLint;
+     return  GLint;
    function gluUnProject4
      (winX    : GLdouble;
       winY    : GLdouble;
@@ -345,7 +345,7 @@ package Sf.Window.GLU is
       objY    : access GLdouble;
       objZ    : access GLdouble;
       objW    : access GLdouble)
-      return    GLint;
+     return    GLint;
 
 private
 

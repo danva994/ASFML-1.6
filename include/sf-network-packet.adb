@@ -1,4 +1,4 @@
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 -- //
 -- // SFML - Simple and Fast Multimedia Library
 -- // Copyright (C) 2007-2009 Laurent Gomila (laurent.gom@gmail.com)
@@ -20,45 +20,45 @@
 -- //
 -- // 3. This notice may not be removed or altered from any source distribution.
 -- //
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
 
--- ////////////////////////////////////////////////////////////
--- // Headers
--- ////////////////////////////////////////////////////////////
+--//////////////////////////////////////////////////////////
+
+--//////////////////////////////////////////////////////////
 with Interfaces.C.Strings;
 
 package body Sf.Network.Packet is
    use Interfaces.C.Strings;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Functions to extract data from a packet
-   -- ///
-   -- /// \param Packet : Packet to read
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfPacket_ReadString (Packet : sfPacket_Ptr; Str : out String) is
-      procedure Internal (Packet : sfPacket_Ptr; Str : chars_ptr);
-      pragma Import (C, Internal, "sfPacket_ReadString");
+   --//////////////////////////////////////////////////////////
+   --/ Functions to extract data from a packet
+   --/
+   --/ @param Packet   Packet to read
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure ReadString (packet : sfPacket_Ptr; Str : out String) is
+      procedure Internal (packet : sfPacket_Ptr; Str : chars_ptr);
+      pragma Import (C, Internal, "sfPacket_readString");
       Temp : chars_ptr;
    begin
-      Internal (Packet, Temp);
+      Internal (packet, Temp);
       Str := Value (Temp) (Str'RANGE);
       Free (Temp);
-   end sfPacket_ReadString;
+   end ReadString;
 
-   -- ////////////////////////////////////////////////////////////
-   -- /// Functions to insert data into a packet
-   -- ///
-   -- /// \param Packet : Packet to write
-   -- ///
-   -- ////////////////////////////////////////////////////////////
-   procedure sfPacket_WriteString (Packet : sfPacket_Ptr; Str : String) is
-      procedure Internal (Packet : sfPacket_Ptr; Str : chars_ptr);
-      pragma Import (C, Internal, "sfPacket_WriteString");
-      Temp : chars_ptr := New_String (Str);
+   --//////////////////////////////////////////////////////////
+   --/ Functions to insert data into a packet
+   --/
+   --/ @param Packet   Packet to write
+   --/
+   --//////////////////////////////////////////////////////////
+   procedure WriteString (packet : sfPacket_Ptr; item : String) is
+      procedure Internal (packet : sfPacket_Ptr; Str : chars_ptr);
+      pragma Import (C, Internal, "sfPacket_writeString");
+      Temp : chars_ptr := New_String (item);
    begin
       Internal (Packet, Temp);
       Free (Temp);
-   end sfPacket_WriteString;
+   end WriteString;
 
 end Sf.Network.Packet;
